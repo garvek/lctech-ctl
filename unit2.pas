@@ -9,7 +9,7 @@ uses
   Classes, SysUtils, Windows, Dialogs;
 
 var
-  ComPort: array[0..80] of Char = 'COM1';
+  ComPort: array[0..4] of Char = 'COM1';  // COMxx
 
 procedure PowerOn();
 procedure PowerOff();
@@ -21,18 +21,23 @@ var
 
 procedure OpenCom();
 var
+  Device: array[0..10] of Char;
   Dcb: TDCB;
 
 begin
-     ComFile := CreateFile(ComPort,
-       GENERIC_WRITE,
+     Device := '\\.\' + ComPort;
+     ComFile := CreateFile(Device,
+       GENERIC_READ or GENERIC_WRITE,
        0,
        nil,
        OPEN_EXISTING,
        FILE_ATTRIBUTE_NORMAL,
        0);
      if ComFile = INVALID_HANDLE_VALUE then
+     begin
+        ShowMessage('Cannot open COM port');
         Exit;
+     end;
 
      Dcb := Default(TDCB);
      if not GetCommState(ComFile, Dcb) then
@@ -44,7 +49,7 @@ begin
        ByteSize := 8;
        Parity := NOPARITY;
        StopBits := ONESTOPBIT;
-       Flags := $1;  // enable binary
+       Flags := bm_DCB_fBinary;
      end;
      if not SetCommState(ComFile, Dcb) then
         Exit;
@@ -65,15 +70,10 @@ var
 begin
      if ComFile <> INVALID_HANDLE_VALUE then
      begin
-       WriteFile(ComFile, s[1], Length(s), BytesWritten, nil);
-       if BytesWritten <> Length(s) then
+       if not WriteFile(ComFile, s[1], Length(s), BytesWritten, nil) then
        begin
-         ShowMessage('Timeout');
+         ShowMessage('Timeout write');
        end;
-     end
-     else
-     begin
-       ShowMessage('Cannot open COM port');
      end;
 end;
 
