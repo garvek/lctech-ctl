@@ -4,3 +4,7 @@ Version 1
 Version 2
 - Support for COM ports greater than 9
 - Add error messages
+
+Version 3
+- Add "stay on top" checkbox
+- Add "about" button
